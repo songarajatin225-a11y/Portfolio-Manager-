@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+/* Dark trading-terminal theme. Colours are tokens so components never hard-code hex values. */
+:root {
+  --background: #07090d;
+  --surface: #0d1117;
+  --surface-2: #131a23;
+  --surface-3: #1a2330;
+  --border: #222c3a;
+  --border-strong: #2f3c4f;
+  --foreground: #e6edf3;
+  --muted: #8b98a9;
+  --subtle: #5c6878;
+  --accent: #3b82f6;
+  --accent-foreground: #ffffff;
+  --up: #22c55e;
+  --down: #ef4444;
+  --warn: #f59e0b;
+  --info: #38bdf8;
+  --live: #22c55e;
+  --delayed: #f59e0b;
+  --historical: #94a3b8;
+  --simulated: #e11d48;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-up: var(--up);
+  --color-down: var(--down);
+  --color-warn: var(--warn);
+  --color-info: var(--info);
+  --color-live: var(--live);
+  --color-delayed: var(--delayed);
+  --color-historical: var(--historical);
+  --color-simulated: var(--simulated);
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+html,
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Financial numbers line up in columns. */
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

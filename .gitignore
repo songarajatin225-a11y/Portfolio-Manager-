@@ -1,0 +1,46 @@
+# --- Secrets & local configuration (never commit real credentials) ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# --- Node / Next.js ---
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+npm-debug.log*
+coverage/
+
+# --- Local data & artifacts ---
+data/
+*.sqlite
+*.db
+*.parquet
+*.joblib
+ml_artifacts/
+uploads/
+logs/
+*.log
+
+# --- OS / editors ---
+.DS_Store
+.idea/
+.vscode/
+*.swp
