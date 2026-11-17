@@ -483,3 +483,85 @@ async def get_sector_strength(db: AsyncSession, _: uuid.UUID, args: dict[str, An
             )
         ],
     }
+
+
+@tool(
+    "get_portfolio_risk",
+    "The user's own portfolio: holdings, P&L, XIRR, allocation, concentration and risk (VaR, volatility, beta, "
+    "correlation, scenarios). Pass a portfolio name or id, or an empty string to list the user's portfolios.",
+    {"portfolio": {"type": "string", "description": "Portfolio name or numeric id; empty to list portfolios"}},
+)
+async def get_portfolio_risk(db: AsyncSession, user_id: uuid.UUID, args: dict[str, Any]) -> dict[str, Any]:
+    from app.db.models import Portfolio
+    from app.services import portfolio as portfolio_service
+
+    ref = str(args.get("portfolio", "")).strip()
+    ports = list((await db.scalars(select(Portfolio).where(Portfolio.user_id == user_id))).all())
+    if not ref:
+        return {
+            "data": {"portfolios": [{"id": p.id, "name": p.name} for p in ports]},
+            "sources": [_src("portfolio", "Your portfolios", "platform portfolio records", datetime.now(UTC))],
+        }
+    match = next((p for p in ports if str(p.id) == ref or p.name.lower() == ref.lower()), None)
+    if match is None:
+        raise NotFoundError(f"No portfolio named '{ref}'. Available: {', '.join(p.name for p in ports) or 'none'}")
+    risk = await portfolio_service.risk(db, match)
+    summary = risk.pop("summary", None) or await portfolio_service.summary(db, match)
+    keep = (
+        "current_value",
+        "total_invested",
+        "unrealized_pnl",
+        "realized_pnl",
+        "dividends",
+        "total_pnl",
+        "absolute_return_pct",
+        "xirr_pct",
+        "allocation_by_sector",
+        "concentration",
+        "note",
+        "price_statuses",
+    )
+    holdings = [
+        {
+            k: h[k]
+            for k in (
+                "symbol",
+                "quantity",
+                "avg_cost",
+                "price",
+                "market_value",
+                "unrealized_pnl",
+                "weight",
+                "sector",
+                "price_status",
+                "price_as_of",
+            )
+        }
+        for h in summary["holdings"]
+    ]
+    risk_view = {k: v for k, v in risk.items() if k not in ("position_exposure", "sector_exposure", "concentration")}
+    statuses = ",".join(summary.get("price_statuses") or []) or None
+    return {
+        "data": {
+            "portfolio": match.name,
+            "summary": {k: summary.get(k) for k in keep},
+            "holdings": holdings,
+            "risk": risk_view,
+        },
+        "sources": [
+            _src(
+                "portfolio",
+                f"Portfolio '{match.name}' holdings and prices",
+                "platform portfolio records + quotes",
+                datetime.now(UTC),
+                statuses,
+            ),
+            _src(
+                "risk",
+                "Historical risk estimates",
+                "platform daily candles",
+                risk.get("as_of"),
+                risk.get("data_status"),
+            ),
+        ],
+    }

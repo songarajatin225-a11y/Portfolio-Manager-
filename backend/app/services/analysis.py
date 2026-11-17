@@ -154,12 +154,18 @@ async def fundamental_periods(db: AsyncSession, instrument_id: int) -> list[Peri
     ]
 
 
-async def benchmark_frame(db: AsyncSession) -> pd.DataFrame | None:
+async def benchmark_instrument(db: AsyncSession) -> Instrument | None:
+    """The configured benchmark index resolved in the current data mode."""
     code = (await app_settings.get_section(db, "market")).get("benchmark_index", "NIFTY50")
     for entry in await instrument_service.dashboard_indices(db):
         if entry["code"] == code and entry["instrument"] is not None:
-            return await load_daily(db, entry["instrument"])
+            return entry["instrument"]
     return None
+
+
+async def benchmark_frame(db: AsyncSession) -> pd.DataFrame | None:
+    inst = await benchmark_instrument(db)
+    return await load_daily(db, inst) if inst is not None else None
 
 
 async def refresh_metrics(db: AsyncSession, instrument_ids: list[int] | None = None, allow_fetch: bool = True) -> int:

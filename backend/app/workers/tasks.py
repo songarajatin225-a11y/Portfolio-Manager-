@@ -98,6 +98,23 @@ async def ml_loop() -> None:
         listener.cancel()
 
 
+async def alerts_loop() -> None:
+    """Evaluate active alerts on the configured interval."""
+    from app.db.session import get_sessionmaker
+    from app.services.alerts import evaluate_alerts
+
+    await asyncio.sleep(15)
+    while True:
+        try:
+            async with get_sessionmaker()() as db:
+                n = await evaluate_alerts(db)
+            if n:
+                logger.info("Alerts triggered: %d", n)
+        except Exception:  # noqa: BLE001 - keep evaluating on the next cycle
+            logger.exception("Alert evaluation cycle failed")
+        await asyncio.sleep(max(5.0, await _setting("refresh", "alert_eval_seconds")))
+
+
 def registry() -> dict[str, Callable[[], Awaitable[None]]]:
     from app.marketdata.manager import run_feed_manager
 
@@ -106,4 +123,5 @@ def registry() -> dict[str, Callable[[], Awaitable[None]]]:
         "metrics": metrics_loop,
         "news": news_loop,
         "ml": ml_loop,
+        "alerts": alerts_loop,
     }

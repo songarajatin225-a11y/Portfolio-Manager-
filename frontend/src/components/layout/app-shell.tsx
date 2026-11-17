@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/feedback";
 import { MarketStreamProvider } from "@/lib/market-stream";
 import { cn } from "@/lib/utils";
 import { NAV, isActive } from "./nav";
+import { NotificationBell } from "./notification-bell";
 import { TopBarStatus } from "./topbar-status";
 
 function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
@@ -139,6 +140,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="min-w-0 flex-1">
             <TopBarStatus />
           </div>
+          <NotificationBell />
           <UserMenu />
         </header>
         <main className="min-w-0 flex-1 p-3 sm:p-5">{children}</main>

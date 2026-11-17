@@ -81,3 +81,20 @@ async def register_and_login(
 async def admin_client(client: AsyncClient) -> AsyncClient:
     await register_and_login(client)
     return client
+
+
+@pytest.fixture
+def fake_claude():
+    """Install a scripted fake Anthropic client; each script step is a response or a callable(kwargs)."""
+    from types import SimpleNamespace
+
+    from app.ai import client as ai_client
+    from tests.test_ai import FakeMessages
+
+    def install(script: list) -> FakeMessages:
+        fm = FakeMessages(script)
+        ai_client.set_client(SimpleNamespace(beta=SimpleNamespace(messages=fm)))
+        return fm
+
+    yield install
+    ai_client.set_client(None)

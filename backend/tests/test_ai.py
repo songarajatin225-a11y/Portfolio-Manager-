@@ -6,10 +6,8 @@ import json
 from types import SimpleNamespace
 from typing import Any
 
-import pytest
 from httpx import AsyncClient
 
-from app.ai import client as ai_client
 from app.ai.assistant import SYSTEM_PROMPT
 from app.ai.reports import REPORT_SCHEMA
 from tests.test_market_api import setup_simulated
@@ -42,17 +40,6 @@ class FakeMessages:
         self.calls.append(json.loads(json.dumps(kwargs, default=lambda o: o.__dict__)))
         step = self.script.pop(0)
         return step(kwargs) if callable(step) else step
-
-
-@pytest.fixture
-def fake_claude():
-    def install(script: list) -> FakeMessages:
-        fm = FakeMessages(script)
-        ai_client.set_client(SimpleNamespace(beta=SimpleNamespace(messages=fm)))
-        return fm
-
-    yield install
-    ai_client.set_client(None)
 
 
 async def test_ai_unavailable_without_key(admin_client: AsyncClient) -> None:

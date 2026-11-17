@@ -67,6 +67,7 @@ export function InstrumentSearch({ onSelect, placeholder = "Search symbol or com
               key={i.id}
               role="option"
               aria-selected={idx === active}
+              aria-label={`${i.symbol} ${i.name} ${i.exchange} ${i.segment}`}
               onMouseDown={(e) => {
                 e.preventDefault();
                 choose(i);
