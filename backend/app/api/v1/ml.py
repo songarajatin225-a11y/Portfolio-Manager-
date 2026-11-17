@@ -206,7 +206,7 @@ async def stock_prediction(symbol: str, _: CurrentUser, db: DB) -> dict[str, Any
             select(MLPrediction, MLModel)
             .join(MLModel, MLModel.id == MLPrediction.model_id)
             .where(MLPrediction.instrument_id == inst.id)
-            .order_by(MLPrediction.as_of.desc())
+            .order_by(MLPrediction.as_of.desc(), MLPrediction.created_at.desc())
             .limit(90)
         )
     ).all()

@@ -373,7 +373,7 @@ async def get_ml_prediction(db: AsyncSession, _: uuid.UUID, args: dict[str, Any]
             select(MLPrediction, MLModel)
             .join(MLModel, MLModel.id == MLPrediction.model_id)
             .where(MLPrediction.instrument_id == inst.id)
-            .order_by(MLPrediction.as_of.desc())
+            .order_by(MLPrediction.as_of.desc(), MLPrediction.created_at.desc())
             .limit(1)
         )
     ).first()

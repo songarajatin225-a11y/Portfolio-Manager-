@@ -9,7 +9,7 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-from sqlalchemy import func, literal, select, update
+from sqlalchemy import delete, func, literal, select, update
 from sqlalchemy.dialects.postgresql import JSONB, insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -347,6 +347,15 @@ async def generate_predictions(
     )
     for iid, v in out.items():
         as_of = latest.loc[iid, "date"].date()
+        # one prediction per instrument and date: replace an unevaluated row hosted on a different model
+        await db.execute(
+            delete(MLPrediction).where(
+                MLPrediction.instrument_id == iid,
+                MLPrediction.as_of == as_of,
+                MLPrediction.model_id != host.id,
+                MLPrediction.evaluated_at.is_(None),
+            )
+        )
         stmt = insert(MLPrediction).values(
             model_id=host.id,
             instrument_id=iid,

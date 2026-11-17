@@ -190,6 +190,15 @@ async def test_ml_service_end_to_end(admin_client: AsyncClient, db) -> None:
     ).json()
     assert screen["matched"] >= 30
 
+    # exactly one prediction per instrument and date, even after the host model changed
+    dup = (
+        await db.execute(
+            select(MLPrediction.instrument_id, MLPrediction.as_of)
+            .group_by(MLPrediction.instrument_id, MLPrediction.as_of)
+            .having(__import__("sqlalchemy").func.count() > 1)
+        )
+    ).all()
+    assert dup == []
     stock = (await admin_client.get("/api/v1/stocks/SIMBANKA/prediction")).json()
     assert stock["latest"]["trend_class"] and stock["model"]["test"]
 
