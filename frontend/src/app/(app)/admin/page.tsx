@@ -10,6 +10,7 @@ import { SystemStatusPanel } from "./status-panel";
 import { UsersPanel } from "./users-panel";
 import { SettingsPanel } from "./settings-panel";
 import { AuditPanel } from "./audit-panel";
+import { ImportsPanel } from "./imports-panel";
 
 function AdminTabs() {
   const { isAdmin } = useAuth();
@@ -23,6 +24,7 @@ function AdminTabs() {
         {isAdmin ? (
           <>
             <TabsTrigger value="settings">Settings</TabsTrigger>
+            <TabsTrigger value="imports">Data Imports</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="audit">Audit Log</TabsTrigger>
           </>
@@ -35,6 +37,9 @@ function AdminTabs() {
         <>
           <TabsContent value="settings">
             <SettingsPanel />
+          </TabsContent>
+          <TabsContent value="imports">
+            <ImportsPanel />
           </TabsContent>
           <TabsContent value="users">
             <UsersPanel />

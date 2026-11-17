@@ -142,5 +142,9 @@ class InstrumentMetrics(Base):
     low_52w: Mapped[float | None] = mapped_column(Float)
     volatility_20: Mapped[float | None] = mapped_column(Float)
     flags: Mapped[dict] = mapped_column(JSONB, default=dict, server_default="{}")
+    market_cap: Mapped[float | None] = mapped_column(Float)
+    # Fundamental ratios snapshot (values only) and ML/AI scores used by the screener.
+    fundamentals: Mapped[dict] = mapped_column(JSONB, default=dict, server_default="{}")
+    scores: Mapped[dict] = mapped_column(JSONB, default=dict, server_default="{}")
     bars_used: Mapped[int] = mapped_column(Integer, default=0)
     source: Mapped[str] = mapped_column(String(60), default="")

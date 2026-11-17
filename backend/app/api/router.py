@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1 import admin, auth, instruments, market, providers, system, users, watchlists
+from app.api.v1 import admin, auth, data, instruments, market, providers, screener, stocks, system, users, watchlists
 
 api_router = APIRouter()
 api_router.include_router(system.router)
@@ -11,3 +11,6 @@ api_router.include_router(providers.router)
 api_router.include_router(market.router)
 api_router.include_router(instruments.router)
 api_router.include_router(watchlists.router)
+api_router.include_router(stocks.router)
+api_router.include_router(screener.router)
+api_router.include_router(data.router)

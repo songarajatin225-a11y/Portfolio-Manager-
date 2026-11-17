@@ -27,10 +27,10 @@ export function useFlash(value: number | null | undefined): string {
   }
   React.useEffect(() => {
     if (!flash.dir) return;
-    const t = setTimeout(() => setFlash((f) => ({ ...f, dir: "" })), 700);
+    const t = setTimeout(() => setFlash((f) => ({ ...f, dir: "" })), 450);
     return () => clearTimeout(t);
   }, [flash]);
-  return flash.dir === "up" ? "bg-up/20" : flash.dir === "down" ? "bg-down/20" : "";
+  return flash.dir === "up" ? "bg-up/10" : flash.dir === "down" ? "bg-down/10" : "";
 }
 
 export function LiveBadge({ quote }: { quote: LiveQuote | null }) {
