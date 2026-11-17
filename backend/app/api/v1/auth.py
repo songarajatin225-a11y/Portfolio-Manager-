@@ -50,8 +50,9 @@ async def register(body: RegisterRequest, request: Request, response: Response, 
     if count > 0 and not get_settings().allow_public_registration:
         raise PermissionDenied("Registration is closed. Ask an administrator to create your account.")
     role = Role.ADMIN if count == 0 else Role.ANALYST
-    user = await auth_service.create_user(db, email=body.email, password=body.password,
-                                          full_name=body.full_name, role=role)
+    user = await auth_service.create_user(
+        db, email=body.email, password=body.password, full_name=body.full_name, role=role
+    )
     user.last_login_at = datetime.now(UTC)
     csrf = await auth_service.issue_session(db, response, user, request)
     await audit(db, action="auth.register", user_id=user.id, request=request, details={"role": role})
@@ -66,8 +67,7 @@ async def login(body: LoginRequest, request: Request, response: Response, db: DB
     await enforce_rate_limit(f"login:email:{body.email.lower()}", limit)
     user = await auth_service.authenticate(db, body.email, body.password)
     if user is None or not user.is_active:
-        await audit(db, action="auth.login_failed", request=request, details={"email": body.email.lower()},
-                    commit=True)
+        await audit(db, action="auth.login_failed", request=request, details={"email": body.email.lower()}, commit=True)
         raise AuthError("Invalid email or password", code="invalid_credentials")
     user.last_login_at = datetime.now(UTC)
     csrf = await auth_service.issue_session(db, response, user, request)
@@ -84,8 +84,9 @@ async def token(form: Annotated[OAuth2PasswordRequestForm, Depends()], request: 
         await audit(db, action="auth.token_failed", request=request, commit=True)
         raise AuthError("Invalid email or password", code="invalid_credentials")
     await audit(db, action="auth.token", user_id=user.id, request=request, commit=True)
-    return TokenOut(access_token=create_access_token(user.id, user.role),
-                    expires_in=get_settings().access_token_ttl_minutes * 60)
+    return TokenOut(
+        access_token=create_access_token(user.id, user.role), expires_in=get_settings().access_token_ttl_minutes * 60
+    )
 
 
 @router.post("/refresh", response_model=SessionOut)

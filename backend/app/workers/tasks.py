@@ -6,4 +6,8 @@ from collections.abc import Awaitable, Callable
 
 
 def registry() -> dict[str, Callable[[], Awaitable[None]]]:
-    return {}
+    from app.marketdata.manager import run_feed_manager
+
+    return {
+        "feed_manager": run_feed_manager,
+    }

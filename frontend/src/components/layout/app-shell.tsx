@@ -7,6 +7,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { LineChart, LogOut, Menu, X } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { Skeleton } from "@/components/ui/feedback";
+import { MarketStreamProvider } from "@/lib/market-stream";
 import { cn } from "@/lib/utils";
 import { NAV, isActive } from "./nav";
 import { TopBarStatus } from "./topbar-status";
@@ -106,6 +107,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
+    <MarketStreamProvider>
     <div className="flex min-h-screen">
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 border-r border-border bg-surface lg:block">
         <Sidebar />
@@ -145,5 +147,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </footer>
       </div>
     </div>
+    </MarketStreamProvider>
   );
 }

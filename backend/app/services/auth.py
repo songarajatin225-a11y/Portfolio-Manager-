@@ -65,8 +65,9 @@ async def authenticate(db: AsyncSession, email: str, password: str) -> User | No
     return user
 
 
-async def issue_session(db: AsyncSession, response: Response, user: User, request: Request,
-                        family_id: uuid.UUID | None = None) -> str:
+async def issue_session(
+    db: AsyncSession, response: Response, user: User, request: Request, family_id: uuid.UUID | None = None
+) -> str:
     """Create access + refresh tokens and set them as httpOnly cookies. Returns the CSRF token."""
     settings = get_settings()
     raw_refresh = new_refresh_token()
@@ -83,12 +84,33 @@ async def issue_session(db: AsyncSession, response: Response, user: User, reques
     access = create_access_token(user.id, user.role)
     csrf = new_csrf_token()
     common = {"secure": settings.secure_cookies, "domain": settings.cookie_domain}
-    response.set_cookie(ACCESS_COOKIE, access, httponly=True, samesite="lax", path="/",
-                        max_age=settings.access_token_ttl_minutes * 60, **common)
-    response.set_cookie(REFRESH_COOKIE, raw_refresh, httponly=True, samesite="strict", path=REFRESH_PATH,
-                        max_age=settings.refresh_token_ttl_days * 86400, **common)
-    response.set_cookie(CSRF_COOKIE, csrf, httponly=False, samesite="lax", path="/",
-                        max_age=settings.refresh_token_ttl_days * 86400, **common)
+    response.set_cookie(
+        ACCESS_COOKIE,
+        access,
+        httponly=True,
+        samesite="lax",
+        path="/",
+        max_age=settings.access_token_ttl_minutes * 60,
+        **common,
+    )
+    response.set_cookie(
+        REFRESH_COOKIE,
+        raw_refresh,
+        httponly=True,
+        samesite="strict",
+        path=REFRESH_PATH,
+        max_age=settings.refresh_token_ttl_days * 86400,
+        **common,
+    )
+    response.set_cookie(
+        CSRF_COOKIE,
+        csrf,
+        httponly=False,
+        samesite="lax",
+        path="/",
+        max_age=settings.refresh_token_ttl_days * 86400,
+        **common,
+    )
     return csrf
 
 
@@ -98,8 +120,7 @@ def clear_session_cookies(response: Response) -> None:
         response.delete_cookie(name, path=path, domain=settings.cookie_domain)
 
 
-async def rotate_refresh(db: AsyncSession, response: Response, request: Request,
-                         raw_refresh: str) -> tuple[User, str]:
+async def rotate_refresh(db: AsyncSession, response: Response, request: Request, raw_refresh: str) -> tuple[User, str]:
     now = datetime.now(UTC)
     token = await db.scalar(select(RefreshToken).where(RefreshToken.token_hash == hash_token(raw_refresh)))
     if token is None:
@@ -123,8 +144,10 @@ async def rotate_refresh(db: AsyncSession, response: Response, request: Request,
     token.revoked_at = now
     csrf = await issue_session(db, response, user, request, family_id=token.family_id)
     new_token = await db.scalar(
-        select(RefreshToken).where(RefreshToken.family_id == token.family_id, RefreshToken.revoked_at.is_(None))
-        .order_by(RefreshToken.id.desc()).limit(1)
+        select(RefreshToken)
+        .where(RefreshToken.family_id == token.family_id, RefreshToken.revoked_at.is_(None))
+        .order_by(RefreshToken.id.desc())
+        .limit(1)
     )
     token.replaced_by_id = new_token.id if new_token else None
     return user, csrf
@@ -148,8 +171,13 @@ async def bootstrap_admin(db: AsyncSession) -> None:
         return
     if await user_count(db) > 0:
         return
-    user = await create_user(db, email=settings.bootstrap_admin_email, password=settings.bootstrap_admin_password,
-                             full_name="Administrator", role=Role.ADMIN)
+    user = await create_user(
+        db,
+        email=settings.bootstrap_admin_email,
+        password=settings.bootstrap_admin_password,
+        full_name="Administrator",
+        role=Role.ADMIN,
+    )
     await audit(db, action="auth.bootstrap_admin", user_id=user.id)
     await db.commit()
     logger.info("Bootstrap admin account created")

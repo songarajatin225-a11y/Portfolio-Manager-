@@ -24,8 +24,7 @@ async def test_first_user_becomes_admin_and_registration_closes(client: AsyncCli
     assert data["user"]["role"] == "admin"
     # second registration is refused when public registration is disabled
     client.cookies.clear()
-    r = await client.post("/api/v1/auth/register",
-                          json={"email": "other@example.com", "password": "AnotherPass123"})
+    r = await client.post("/api/v1/auth/register", json={"email": "other@example.com", "password": "AnotherPass123"})
     assert r.status_code == 403
     assert (await client.get("/api/v1/auth/bootstrap-status")).json()["needs_setup"] is False
 
@@ -117,16 +116,18 @@ async def test_weak_password_rejected(client: AsyncClient) -> None:
 
 
 async def test_admin_user_management_and_rbac(admin_client: AsyncClient) -> None:
-    r = await admin_client.post("/api/v1/users", json={"email": "viewer@example.com", "password": "ViewerPass123",
-                                                        "role": "viewer"})
+    r = await admin_client.post(
+        "/api/v1/users", json={"email": "viewer@example.com", "password": "ViewerPass123", "role": "viewer"}
+    )
     assert r.status_code == 201
     viewer_id = r.json()["id"]
     assert len((await admin_client.get("/api/v1/users")).json()) == 2
 
     # viewer cannot list users
     admin_client.cookies.clear()
-    login = await admin_client.post("/api/v1/auth/login",
-                                    json={"email": "viewer@example.com", "password": "ViewerPass123"})
+    login = await admin_client.post(
+        "/api/v1/auth/login", json={"email": "viewer@example.com", "password": "ViewerPass123"}
+    )
     admin_client.headers["X-CSRF-Token"] = login.json()["csrf_token"]
     assert (await admin_client.get("/api/v1/users")).status_code == 403
 
@@ -137,8 +138,7 @@ async def test_admin_user_management_and_rbac(admin_client: AsyncClient) -> None
     r = await admin_client.patch(f"/api/v1/users/{viewer_id}", json={"is_active": False})
     assert r.status_code == 200 and r.json()["is_active"] is False
     admin_client.cookies.clear()
-    r = await admin_client.post("/api/v1/auth/login", json={"email": "viewer@example.com",
-                                                             "password": "ViewerPass123"})
+    r = await admin_client.post("/api/v1/auth/login", json={"email": "viewer@example.com", "password": "ViewerPass123"})
     assert r.status_code == 401
 
 

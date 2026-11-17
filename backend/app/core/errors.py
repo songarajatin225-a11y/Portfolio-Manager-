@@ -22,8 +22,9 @@ class AppError(Exception):
     status_code = 400
     code = "bad_request"
 
-    def __init__(self, message: str, *, code: str | None = None, status_code: int | None = None,
-                 details: object | None = None) -> None:
+    def __init__(
+        self, message: str, *, code: str | None = None, status_code: int | None = None, details: object | None = None
+    ) -> None:
         super().__init__(message)
         self.message = message
         if code:
@@ -80,14 +81,14 @@ def install_exception_handlers(app: FastAPI) -> None:
         code = {401: "unauthorized", 403: "forbidden", 404: "not_found", 405: "method_not_allowed"}.get(
             exc.status_code, "http_error"
         )
-        return JSONResponse(status_code=exc.status_code, content=_body(code, str(exc.detail)),
-                            headers=getattr(exc, "headers", None))
+        return JSONResponse(
+            status_code=exc.status_code, content=_body(code, str(exc.detail)), headers=getattr(exc, "headers", None)
+        )
 
     @app.exception_handler(RequestValidationError)
     async def _validation_error(_: Request, exc: RequestValidationError) -> JSONResponse:
         details = [
-            {"loc": list(err.get("loc", [])), "msg": err.get("msg"), "type": err.get("type")}
-            for err in exc.errors()
+            {"loc": list(err.get("loc", [])), "msg": err.get("msg"), "type": err.get("type")} for err in exc.errors()
         ]
         return JSONResponse(status_code=422, content=_body("validation_error", "Invalid request", details))
 

@@ -29,14 +29,20 @@ async def collect_status(db: AsyncSession) -> dict[str, Any]:
         services.append(_svc("database", "error", type(exc).__name__))
 
     bus = get_bus()
-    services.append(_svc("message_bus", "ok" if await bus.ping() else "error",
-                         "Redis" if settings.redis_url else "in-process memory bus"))
+    services.append(
+        _svc(
+            "message_bus",
+            "ok" if await bus.ping() else "error",
+            "Redis" if settings.redis_url else "in-process memory bus",
+        )
+    )
 
     hb = await bus.get_json(K_WORKER_HEARTBEAT)
     if hb:
         age = (datetime.now(UTC) - datetime.fromisoformat(hb["ts"])).total_seconds()
-        services.append(_svc("worker", "ok" if age < 90 else "error",
-                             f"last heartbeat {int(age)}s ago", tasks=hb.get("tasks", {})))
+        services.append(
+            _svc("worker", "ok" if age < 90 else "error", f"last heartbeat {int(age)}s ago", tasks=hb.get("tasks", {}))
+        )
     else:
         services.append(_svc("worker", "error", "no heartbeat - worker process is not running"))
 
@@ -47,24 +53,40 @@ async def collect_status(db: AsyncSession) -> dict[str, Any]:
     else:
         state = health.get("state", "unknown")
         status = {"connected": "ok", "polling": "ok", "degraded": "warning", "market_closed": "ok"}.get(state, "error")
-        services.append(_svc("market_data", status, f"{provider.name} ({provider.provider_type}): {state}",
-                             health=health))
+        services.append(
+            _svc("market_data", status, f"{provider.name} ({provider.provider_type}): {state}", health=health)
+        )
 
     ai_ok = bool(settings.anthropic_api_key)
-    services.append(_svc("ai", "ok" if ai_ok else "not_configured",
-                         "Claude API key configured" if ai_ok else "ANTHROPIC_API_KEY is not set"))
+    services.append(
+        _svc(
+            "ai",
+            "ok" if ai_ok else "not_configured",
+            "Claude API key configured" if ai_ok else "ANTHROPIC_API_KEY is not set",
+        )
+    )
 
     active_models = await db.scalar(select(func.count()).select_from(MLModel).where(MLModel.status == "active"))
-    services.append(_svc("ml", "ok" if active_models else "not_configured",
-                         f"{active_models} active model(s)" if active_models else "No trained models yet"))
+    services.append(
+        _svc(
+            "ml",
+            "ok" if active_models else "not_configured",
+            f"{active_models} active model(s)" if active_models else "No trained models yet",
+        )
+    )
 
     sources = (await db.scalars(select(NewsSource).where(NewsSource.is_active.is_(True)))).all()
     if not sources:
         services.append(_svc("news", "not_configured", "No news feeds configured"))
     else:
         failing = [s.name for s in sources if s.last_error]
-        services.append(_svc("news", "warning" if failing else "ok",
-                             f"{len(sources)} feed(s)" + (f"; failing: {', '.join(failing)}" if failing else "")))
+        services.append(
+            _svc(
+                "news",
+                "warning" if failing else "ok",
+                f"{len(sources)} feed(s)" + (f"; failing: {', '.join(failing)}" if failing else ""),
+            )
+        )
 
     overall = "ok"
     if any(s["status"] == "error" for s in services):

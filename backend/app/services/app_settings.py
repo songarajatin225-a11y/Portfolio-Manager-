@@ -22,10 +22,18 @@ DEFAULT_DASHBOARD_INDICES = [
     {"code": "BANKNIFTY", "label": "BANK NIFTY", "names": ["Nifty Bank"], "exchange": "NSE"},
     {"code": "INDIAVIX", "label": "INDIA VIX", "names": ["India VIX"], "exchange": "NSE"},
     {"code": "NIFTYNEXT50", "label": "NIFTY NEXT 50", "names": ["Nifty Next 50"], "exchange": "NSE"},
-    {"code": "NIFTYMIDCAP", "label": "NIFTY MIDCAP 100", "names": ["Nifty Midcap 100", "NIFTY MIDCAP 100"],
-     "exchange": "NSE"},
-    {"code": "NIFTYSMALLCAP", "label": "NIFTY SMALLCAP 100",
-     "names": ["Nifty Smallcap 100", "NIFTY SMLCAP 100"], "exchange": "NSE"},
+    {
+        "code": "NIFTYMIDCAP",
+        "label": "NIFTY MIDCAP 100",
+        "names": ["Nifty Midcap 100", "NIFTY MIDCAP 100"],
+        "exchange": "NSE",
+    },
+    {
+        "code": "NIFTYSMALLCAP",
+        "label": "NIFTY SMALLCAP 100",
+        "names": ["Nifty Smallcap 100", "NIFTY SMLCAP 100"],
+        "exchange": "NSE",
+    },
 ]
 
 DEFAULTS: dict[str, dict[str, Any]] = {
@@ -55,8 +63,14 @@ DEFAULTS: dict[str, dict[str, Any]] = {
     },
     "notifications": {
         "in_app": True,
-        "email": {"enabled": False, "smtp_host": "", "smtp_port": 587, "smtp_username": "",
-                  "from_address": "", "use_tls": True},
+        "email": {
+            "enabled": False,
+            "smtp_host": "",
+            "smtp_port": 587,
+            "smtp_username": "",
+            "from_address": "",
+            "use_tls": True,
+        },
         "telegram": {"enabled": False, "chat_id": ""},
     },
     "ml": {

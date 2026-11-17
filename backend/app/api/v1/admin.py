@@ -22,8 +22,12 @@ def _infra_summary() -> dict[str, Any]:
     db = urlparse(s.database_url.replace("+asyncpg", ""))
     return {
         "environment": s.environment,
-        "database": {"host": db.hostname, "port": db.port, "name": (db.path or "").lstrip("/"),
-                     "configured_via": "DATABASE_URL environment variable"},
+        "database": {
+            "host": db.hostname,
+            "port": db.port,
+            "name": (db.path or "").lstrip("/"),
+            "configured_via": "DATABASE_URL environment variable",
+        },
         "redis_configured": bool(s.redis_url),
         "worker_mode": "embedded in API" if s.run_worker_in_api else "separate process",
         "simulated_feed_allowed": s.allow_simulated_feed,
@@ -50,8 +54,15 @@ async def update_section(section: str, body: SectionUpdate, request: Request, ad
     if section not in app_settings.DEFAULTS:
         raise NotFoundError(f"Unknown settings section '{section}'")
     updated = await app_settings.update_section(db, section, body.value, admin.id)
-    await audit(db, action="settings.update", user_id=admin.id, request=request, entity_type="settings",
-                entity_id=section, details={"keys": sorted(body.value.keys())})
+    await audit(
+        db,
+        action="settings.update",
+        user_id=admin.id,
+        request=request,
+        entity_type="settings",
+        entity_id=section,
+        details={"keys": sorted(body.value.keys())},
+    )
     await db.commit()
     return updated
 
@@ -65,8 +76,15 @@ class SecretsUpdate(BaseModel):
 async def update_secrets(body: SecretsUpdate, request: Request, admin: AdminUser, db: DB) -> dict[str, bool]:
     values = body.model_dump(exclude_none=True)
     await app_settings.set_secrets(db, values, admin.id)
-    await audit(db, action="settings.secrets_update", user_id=admin.id, request=request,
-                entity_type="settings", entity_id="secrets", details={"fields": sorted(values)})
+    await audit(
+        db,
+        action="settings.secrets_update",
+        user_id=admin.id,
+        request=request,
+        entity_type="settings",
+        entity_id="secrets",
+        details={"fields": sorted(values)},
+    )
     await db.commit()
     return await app_settings.secrets_status(db)
 

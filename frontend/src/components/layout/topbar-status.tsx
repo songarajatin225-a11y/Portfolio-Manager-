@@ -3,42 +3,67 @@
 import Link from "next/link";
 import useSWR from "swr";
 import { fetcher } from "@/lib/api";
-import { cn } from "@/lib/utils";
+import { useMarketStream, useNow, type FeedStatus } from "@/lib/market-stream";
+import { cn, timeAgo } from "@/lib/utils";
 
-interface Service {
-  name: string;
-  status: "ok" | "warning" | "error" | "not_configured";
-  detail: string;
-}
-interface SystemStatus {
-  overall: string;
-  simulated_feed_allowed: boolean;
-  services: Service[];
+export interface MarketStatusResponse {
+  data_mode: "real" | "simulated";
+  session: { state: string; source: string; calendar_state: string; as_of: string };
+  feed: FeedStatus;
 }
 
-const DOT: Record<string, string> = {
-  ok: "bg-up",
-  warning: "bg-warn",
+const FEED_DOT: Record<string, string> = {
+  connected: "bg-up",
+  polling: "bg-up",
+  connecting: "bg-warn",
+  authenticating: "bg-warn",
+  reconnecting: "bg-warn",
+  degraded: "bg-warn",
+  idle: "bg-warn",
+  auth_required: "bg-down",
   error: "bg-down",
   not_configured: "bg-subtle",
 };
 
+const SESSION_LABEL: Record<string, string> = {
+  open: "Market open",
+  pre_open: "Pre-open",
+  post_close: "Post-close",
+  closed: "Market closed",
+  weekend: "Weekend — closed",
+  holiday: "Holiday — closed",
+};
+
+export function useMarketStatus() {
+  return useSWR<MarketStatusResponse>("/market/status", fetcher, { refreshInterval: 30_000 });
+}
+
 export function TopBarStatus() {
-  const { data } = useSWR<SystemStatus>("/system/status", fetcher, { refreshInterval: 30_000 });
-  if (!data) return <span className="text-xs text-subtle">Checking services…</span>;
-  const market = data.services.find((s) => s.name === "market_data");
-  const worker = data.services.find((s) => s.name === "worker");
+  const { data } = useMarketStatus();
+  const { feed: liveFeed, connection } = useMarketStream();
+  const now = useNow(5000);
+  const feed = liveFeed ?? data?.feed;
+  const state = feed?.state ?? "unknown";
+  const session = data?.session;
   return (
     <div className="flex min-w-0 items-center gap-3 text-xs">
-      {market ? (
-        <Link href="/admin?tab=status" className="flex min-w-0 items-center gap-1.5 text-muted hover:text-foreground" title={market.detail}>
-          <span className={cn("size-2 shrink-0 rounded-full", DOT[market.status])} />
-          <span className="truncate">Feed: {market.status === "not_configured" ? "not configured" : market.detail}</span>
-        </Link>
+      <Link href="/settings/providers" className="flex min-w-0 items-center gap-1.5 text-muted hover:text-foreground" title={feed?.last_error ?? undefined}>
+        <span className={cn("size-2 shrink-0 rounded-full", FEED_DOT[state] ?? "bg-subtle")} />
+        <span className="truncate">
+          {state === "not_configured" || !feed?.provider_name ? "Feed: not configured" : `${feed.provider_name}: ${state.replace("_", " ")}`}
+          {feed?.last_message_at ? <span className="hidden text-subtle sm:inline"> · last tick {timeAgo(feed.last_message_at, now || undefined)}</span> : null}
+        </span>
+      </Link>
+      {session ? (
+        <span className="hidden items-center gap-1.5 text-muted md:flex" title={`Source: ${session.source}`}>
+          <span className={cn("size-2 rounded-full", session.state === "open" ? "bg-up" : "bg-subtle")} />
+          {SESSION_LABEL[session.state] ?? session.state}
+        </span>
       ) : null}
-      {worker && worker.status !== "ok" ? (
-        <span className="hidden items-center gap-1.5 text-down md:flex" title={worker.detail}>
-          <span className="size-2 rounded-full bg-down" /> Worker offline
+      {connection === "closed" ? <span className="hidden text-warn lg:inline">Stream reconnecting…</span> : null}
+      {data?.data_mode === "simulated" ? (
+        <span className="rounded bg-simulated px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white" title="All data on this instance is simulated">
+          Simulated data — not real prices
         </span>
       ) : null}
     </div>

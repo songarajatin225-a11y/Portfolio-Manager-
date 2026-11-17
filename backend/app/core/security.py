@@ -114,3 +114,13 @@ def new_csrf_token() -> str:
 
 def constant_time_equals(a: str, b: str) -> bool:
     return secrets.compare_digest(a.encode(), b.encode())
+
+
+def create_signed_state(payload: dict[str, Any], ttl_seconds: int = 600) -> str:
+    """Signed, expiring state value (e.g. OAuth ``state``) bound to a purpose via ``type``."""
+    now = datetime.now(UTC)
+    return _encode({**payload, "iat": now, "exp": now + timedelta(seconds=ttl_seconds), "sub": payload.get("sub", "-")})
+
+
+def decode_signed_state(token: str, expected_type: str) -> dict[str, Any]:
+    return decode_token(token, expected_type)

@@ -48,6 +48,7 @@ class NewsArticleInstrument(Base):
     __tablename__ = "news_article_instruments"
 
     article_id: Mapped[int] = mapped_column(ForeignKey("news_articles.id", ondelete="CASCADE"), primary_key=True)
-    instrument_id: Mapped[int] = mapped_column(ForeignKey("instruments.id", ondelete="CASCADE"), primary_key=True,
-                                               index=True)
+    instrument_id: Mapped[int] = mapped_column(
+        ForeignKey("instruments.id", ondelete="CASCADE"), primary_key=True, index=True
+    )
     match_type: Mapped[str] = mapped_column(String(20), default="name")

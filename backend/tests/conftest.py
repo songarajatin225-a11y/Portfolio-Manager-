@@ -67,10 +67,10 @@ async def client(bus: MemoryBus) -> AsyncIterator[AsyncClient]:
         yield c
 
 
-async def register_and_login(client: AsyncClient, email: str = ADMIN_EMAIL, password: str = ADMIN_PASSWORD,
-                             full_name: str = "Admin") -> dict:
-    r = await client.post("/api/v1/auth/register", json={"email": email, "password": password,
-                                                          "full_name": full_name})
+async def register_and_login(
+    client: AsyncClient, email: str = ADMIN_EMAIL, password: str = ADMIN_PASSWORD, full_name: str = "Admin"
+) -> dict:
+    r = await client.post("/api/v1/auth/register", json={"email": email, "password": password, "full_name": full_name})
     assert r.status_code == 201, r.text
     data = r.json()
     client.headers["X-CSRF-Token"] = data["csrf_token"]

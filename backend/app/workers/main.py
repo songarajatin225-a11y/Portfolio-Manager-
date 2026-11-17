@@ -39,8 +39,11 @@ async def supervise(name: str, factory: TaskFactory, *, max_backoff: float = 60.
             raise
         except Exception as exc:  # noqa: BLE001
             logger.exception("Worker task %s crashed; restarting in %.0fs", name, backoff)
-            _task_state[name] = {"status": "restarting", "error": type(exc).__name__,
-                                 "since": datetime.now(UTC).isoformat()}
+            _task_state[name] = {
+                "status": "restarting",
+                "error": type(exc).__name__,
+                "since": datetime.now(UTC).isoformat(),
+            }
             await asyncio.sleep(backoff)
             backoff = min(backoff * 2, max_backoff)
 
@@ -48,8 +51,9 @@ async def supervise(name: str, factory: TaskFactory, *, max_backoff: float = 60.
 async def heartbeat_loop() -> None:
     bus = get_bus()
     while True:
-        await bus.set_json(K_WORKER_HEARTBEAT, {"ts": datetime.now(UTC).isoformat(), "tasks": _task_state},
-                           ttl_seconds=120)
+        await bus.set_json(
+            K_WORKER_HEARTBEAT, {"ts": datetime.now(UTC).isoformat(), "tasks": _task_state}, ttl_seconds=120
+        )
         await asyncio.sleep(15)
 
 

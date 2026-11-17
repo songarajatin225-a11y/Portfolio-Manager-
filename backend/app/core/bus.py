@@ -38,6 +38,7 @@ class Bus(Protocol):
     async def set_json(self, key: str, value: Any, ttl_seconds: int | None = None) -> None: ...
     async def get_json(self, key: str) -> Any | None: ...
     async def mget_json(self, keys: list[str]) -> list[Any | None]: ...
+    async def set_many_json(self, items: dict[str, Any], ttl_seconds: int | None = None) -> None: ...
     async def incr_window(self, key: str, window_seconds: int) -> int: ...
     async def ping(self) -> bool: ...
     async def close(self) -> None: ...
@@ -83,6 +84,10 @@ class MemoryBus:
 
     async def mget_json(self, keys: list[str]) -> list[Any | None]:
         return [self._alive(k) for k in keys]
+
+    async def set_many_json(self, items: dict[str, Any], ttl_seconds: int | None = None) -> None:
+        for k, v in items.items():
+            await self.set_json(k, v, ttl_seconds)
 
     async def incr_window(self, key: str, window_seconds: int) -> int:
         bucket = f"{key}:{int(time.time() // window_seconds)}"
@@ -135,6 +140,14 @@ class RedisBus:
             return []
         raws = await self._redis.mget(keys)
         return [json.loads(r) if r is not None else None for r in raws]
+
+    async def set_many_json(self, items: dict[str, Any], ttl_seconds: int | None = None) -> None:
+        if not items:
+            return
+        async with self._redis.pipeline(transaction=False) as pipe:
+            for k, v in items.items():
+                pipe.set(k, json.dumps(v, default=str), ex=ttl_seconds)
+            await pipe.execute()
 
     async def incr_window(self, key: str, window_seconds: int) -> int:
         bucket = f"{key}:{int(time.time() // window_seconds)}"

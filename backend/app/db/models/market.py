@@ -25,8 +25,16 @@ from app.db.base import Base, TimestampMixin
 class Instrument(TimestampMixin, Base):
     __tablename__ = "instruments"
     __table_args__ = (
-        UniqueConstraint("exchange", "segment", "symbol", "expiry", "strike", "option_type",
-                         name="uq_instruments_identity", postgresql_nulls_not_distinct=True),
+        UniqueConstraint(
+            "exchange",
+            "segment",
+            "symbol",
+            "expiry",
+            "strike",
+            "option_type",
+            name="uq_instruments_identity",
+            postgresql_nulls_not_distinct=True,
+        ),
         Index("ix_instruments_symbol", "symbol"),
     )
 
@@ -62,8 +70,9 @@ class InstrumentProviderKey(Base):
     provider_type: Mapped[str] = mapped_column(String(40))
     provider_key: Mapped[str] = mapped_column(String(120))  # e.g. NSE_EQ|INE002A01018 or NSE:2885
     provider_token: Mapped[str | None] = mapped_column(String(60))
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(),
-                                                 onupdate=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
 
 
 class IndexConstituent(Base):
@@ -84,8 +93,7 @@ class Candle(Base):
 
     __tablename__ = "candles"
 
-    instrument_id: Mapped[int] = mapped_column(ForeignKey("instruments.id", ondelete="CASCADE"),
-                                               primary_key=True)
+    instrument_id: Mapped[int] = mapped_column(ForeignKey("instruments.id", ondelete="CASCADE"), primary_key=True)
     interval: Mapped[str] = mapped_column(String(10), primary_key=True)  # 1m, 5m, 15m, 30m, 1h, 1d, 1w, 1mo
     ts: Mapped[datetime] = mapped_column(DateTime(timezone=True), primary_key=True)
     is_simulated: Mapped[bool] = mapped_column(Boolean, primary_key=True, default=False)
@@ -103,8 +111,7 @@ class InstrumentMetrics(Base):
 
     __tablename__ = "instrument_metrics"
 
-    instrument_id: Mapped[int] = mapped_column(ForeignKey("instruments.id", ondelete="CASCADE"),
-                                               primary_key=True)
+    instrument_id: Mapped[int] = mapped_column(ForeignKey("instruments.id", ondelete="CASCADE"), primary_key=True)
     is_simulated: Mapped[bool] = mapped_column(Boolean, primary_key=True, default=False)
     as_of: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     last_close: Mapped[float | None] = mapped_column(Float)

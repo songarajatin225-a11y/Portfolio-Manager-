@@ -24,10 +24,18 @@ async def list_users(_: AdminUser, db: DB) -> list[UserOut]:
 
 @router.post("", response_model=UserOut, status_code=201)
 async def create_user(body: UserCreate, request: Request, admin: AdminUser, db: DB) -> UserOut:
-    user = await auth_service.create_user(db, email=body.email, password=body.password,
-                                          full_name=body.full_name, role=body.role)
-    await audit(db, action="user.create", user_id=admin.id, request=request, entity_type="user",
-                entity_id=str(user.id), details={"email": user.email, "role": user.role})
+    user = await auth_service.create_user(
+        db, email=body.email, password=body.password, full_name=body.full_name, role=body.role
+    )
+    await audit(
+        db,
+        action="user.create",
+        user_id=admin.id,
+        request=request,
+        entity_type="user",
+        entity_id=str(user.id),
+        details={"email": user.email, "role": user.role},
+    )
     await db.commit()
     return UserOut.model_validate(user)
 
@@ -57,7 +65,14 @@ async def update_user(user_id: uuid.UUID, body: UserUpdate, request: Request, ad
             raise AppError("; ".join(problems), code="weak_password", status_code=422)
         user.password_hash = hash_password(body.password)
         changes["password_reset"] = True
-    await audit(db, action="user.update", user_id=admin.id, request=request, entity_type="user",
-                entity_id=str(user.id), details=changes)
+    await audit(
+        db,
+        action="user.update",
+        user_id=admin.id,
+        request=request,
+        entity_type="user",
+        entity_id=str(user.id),
+        details=changes,
+    )
     await db.commit()
     return UserOut.model_validate(user)

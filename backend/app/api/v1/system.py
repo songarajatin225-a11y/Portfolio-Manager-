@@ -31,8 +31,9 @@ async def ready(db: DB) -> JSONResponse:
         checks["database"] = "error"
     checks["bus"] = "ok" if await get_bus().ping() else "error"
     ok = all(v == "ok" for v in checks.values())
-    return JSONResponse(status_code=200 if ok else 503, content={"status": "ok" if ok else "degraded",
-                                                                  "checks": checks})
+    return JSONResponse(
+        status_code=200 if ok else 503, content={"status": "ok" if ok else "degraded", "checks": checks}
+    )
 
 
 @router.get("/system/status", summary="Per-service status for the System Status page")
