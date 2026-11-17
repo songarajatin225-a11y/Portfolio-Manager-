@@ -236,3 +236,13 @@ def test_fibonacci_support_resistance_volume_profile() -> None:
     assert sum(b["share"] for b in vp) == pytest.approx(1.0)
     assert ind.crossed_above(pd.Series([1.0, 2, 3]), pd.Series([2.0, 2, 2]), within=2)
     assert not ind.crossed_above(pd.Series([3.0, 3, 3]), pd.Series([2.0, 2, 2]), within=2)
+
+
+def test_to_frame_uses_ist_trading_dates() -> None:
+    """A daily bar stamped 00:00 IST (18:30 UTC the day before) must map to its IST trading date."""
+    from datetime import UTC, date, datetime
+
+    from app.marketdata.types import CandleBar
+
+    df = ind.to_frame([CandleBar(datetime(2026, 11, 16, 18, 30, tzinfo=UTC), 1, 2, 0.5, 1.5, 10)])
+    assert df.index[0].date() == date(2026, 11, 17)

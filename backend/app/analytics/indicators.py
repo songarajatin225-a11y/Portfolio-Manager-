@@ -244,9 +244,17 @@ def crossed_below(a: pd.Series, b: pd.Series, within: int = 1) -> bool:
 
 
 def to_frame(bars: list) -> pd.DataFrame:  # noqa: ANN001 - list[CandleBar]
+    """Bars -> DataFrame indexed in exchange time (IST), so calendar dates match NSE trading days.
+
+    Daily bars are stamped 00:00 IST (18:30 UTC the previous day); working in UTC would shift every
+    trading date back by one day.
+    """
+    from app.marketdata.calendar import IST
+
     if not bars:
         return pd.DataFrame(columns=["open", "high", "low", "close", "volume"])
     df = pd.DataFrame(
         [{"ts": b.ts, "open": b.open, "high": b.high, "low": b.low, "close": b.close, "volume": b.volume} for b in bars]
     ).set_index("ts")
+    df.index = pd.DatetimeIndex(df.index).tz_convert(IST)
     return df.sort_index()

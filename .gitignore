@@ -44,3 +44,7 @@ logs/
 .idea/
 .vscode/
 *.swp
+
+# --- Redis snapshots ---
+*.rdb
+*.aof

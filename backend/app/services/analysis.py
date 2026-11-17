@@ -247,5 +247,21 @@ async def refresh_metrics(db: AsyncSession, instrument_ids: list[int] | None = N
         }
         await db.execute(stmt.on_conflict_do_update(index_elements=["instrument_id", "is_simulated"], set_=update_cols))
         count += 1
+    # merge recent news sentiment into the screener scores (ML scores are left untouched)
+    from sqlalchemy import literal, update
+    from sqlalchemy.dialects.postgresql import JSONB
+
+    from app.news.ingest import instrument_sentiment
+
+    for iid, sent in (await instrument_sentiment(db)).items():
+        await db.execute(
+            update(InstrumentMetrics)
+            .where(InstrumentMetrics.instrument_id == iid, InstrumentMetrics.is_simulated.is_(simulated))
+            .values(
+                scores=InstrumentMetrics.scores.op("||")(
+                    literal({"sentiment_score": round(sent["score"], 3), "sentiment_articles": sent["articles"]}, JSONB)
+                )
+            )
+        )
     await db.commit()
     return count
